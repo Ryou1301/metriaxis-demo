@@ -25,3 +25,8 @@ v1.3:
 GitHub Pages
 - Tous les chemins sont relatifs (pas de /assets/...)
 - 404.html redirige vers index.html
+
+
+v1.5:
+- test_new: suppression du champ Template
+- test_new: sélection d’équipement via liste (numéro interne) + fallback

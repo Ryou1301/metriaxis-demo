@@ -67,6 +67,7 @@
   <div class="grid grid-2">
     <div>
       <div class="h3">Équipement</div>
+<div class="small">Affichage: numéro interne (modifiable dans config.js)</div>
       <input class="input" id="equipment_id" readonly>
     </div>
     <div>
@@ -114,6 +115,7 @@
       <script>
         (async ()=>{
           await requireAuth();
+  await loadEquipmentOptions();
           await initShell("equipment");
           
 const equipment_id = getParam('equipment_id');
@@ -125,9 +127,6 @@ const opTypesAll = await lookup('operation_types','id,code,label,category,is_act
   const opTypes = (opTypesAll||[]).filter(o=>o.category==='test');
 qs('#operation_type_id').innerHTML = `<option value="">—</option>` + opTypes.filter(o=>o.is_active!==false).map(o=>`<option value="${o.id}">${o.label}</option>`).join('');
 
-const templatesAll = await lookup('test_templates','id,name,operation_type_id,is_active');
-  const allowedOpTypeIds = new Set(opTypes.map(o=>o.id));
-  const templates = (templatesAll||[]).filter(t=>!t.operation_type_id || allowedOpTypeIds.has(t.operation_type_id));
 qs('#test_template_id').innerHTML = `<option value="">—</option>` + templates.filter(t=>t.is_active!==false).map(t=>`<option value="${t.id}" data-op="${t.operation_type_id||''}">${t.name}</option>`).join('');
 
 qs('#test_template_id').addEventListener('change', ()=>{
