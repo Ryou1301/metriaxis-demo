@@ -1,1 +1,0 @@
-window.METRIAXIS_CONFIG={SUPABASE_URL:"https://odnnlawxqipblhpubuxt.supabase.co",SUPABASE_ANON_KEY:"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9kbm5sYXd4cWlwYmxocHVidXh0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA3ODc1MzksImV4cCI6MjA4NjM2MzUzOX0.6r6-MF2OxBP_66rGuPQRjhPciBarKSoa4N_wqKrMQZc",STORAGE_BUCKET:"documents"};
