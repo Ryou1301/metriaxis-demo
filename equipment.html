@@ -1,0 +1,239 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Metriaxis Demo — Équipements</title>
+  <link rel="stylesheet" href="assets/styles.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="assets/config.js"></script>
+  <script src="assets/supabaseClient.js"></script>
+  <script src="assets/app.js"></script>
+  <script src="assets/api.js"></script>
+</head>
+<body>
+  <div class="layout">
+    <aside class="sidebar">
+      <div class="brand">
+        <span class="logo" aria-hidden="true"></span>
+        <div>
+          <div class="title">Metriaxis</div>
+          <div class="subtle">Demo Netlify</div>
+        </div>
+      </div>
+
+      <div class="nav" aria-label="Navigation">
+        <a href="kpi.html" data-page="kpi"><span>KPI</span><span class="small">→</span></a>
+        <a href="planning.html" data-page="planning"><span>Planning</span><span class="small">→</span></a>
+        <a href="equipment.html" data-page="equipment"><span>Équipements</span><span class="small">→</span></a>
+      </div>
+
+      <div class="meta">
+        <div class="row between">
+          <div class="small">Client</div>
+          <select id="clientSelect" class="input" style="max-width:160px;padding:8px 10px;border-radius:12px"></select>
+        </div>
+        <div style="margin-top:10px" class="kv"><span>Nom</span><span id="clientMetaName">—</span></div>
+        <div class="kv"><span>Code</span><span id="clientMetaCode">—</span></div>
+        <div class="kv"><span>User</span><span id="userEmail">—</span></div>
+        <div style="margin-top:10px" class="row end">
+          <button id="logoutBtn" class="btn secondary sm">Déconnexion</button>
+        </div>
+        <div id="shellNotice" class="notice" style="margin-top:10px"></div>
+      </div>
+    </aside>
+
+    <main class="main">
+      <div class="page-head">
+        <div class="left">
+          <div class="breadcrumb"><a href="kpi.html">Dashboard</a> / <a href="equipment.html">Équipements</a></div>
+          <div class="h1">Équipements</div>
+          <div class="subtle">Liste enrichie (view)</div>
+        </div>
+        <div class="actions"></div>
+      </div>
+
+      
+<div class="card" style="padding:14px">
+  <div class="row between">
+    <div>
+      <div class="h2">Liste équipements</div>
+      <div class="subtle">Basée sur <code>v_ui_equipment_list</code></div>
+    </div>
+    <div class="row" style="gap:8px">
+      <a class="btn secondary sm" href="planning.html">Planning</a>
+      <button id="refreshBtn" class="btn secondary sm">Rafraîchir</button>
+    </div>
+  </div>
+
+  <div class="hr"></div>
+
+  <div class="grid grid-3" style="align-items:end">
+    <div>
+      <div class="h3">Recherche</div>
+      <input id="q" class="input" placeholder="Désignation, N° interne, responsable…">
+    </div>
+    <div>
+      <div class="h3">Tri</div>
+      <select id="sortBy" class="input">
+        <option value="due_asc">Échéance (proche → loin)</option>
+        <option value="due_desc">Échéance (loin → proche)</option>
+        <option value="internal_asc">N° interne (A→Z)</option>
+        <option value="designation_asc">Désignation (A→Z)</option>
+      </select>
+    </div>
+    <div>
+      <div class="h3">Sévérité</div>
+      <select id="sev" class="input">
+        <option value="all">Toutes</option>
+        <option value="ok">OK</option>
+        <option value="watch">Surveillance</option>
+        <option value="alert">Alerte</option>
+        <option value="crit">Critique</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="row" style="margin-top:10px">
+    <div style="margin-left:auto" class="small"><span id="countLabel">—</span></div>
+  </div>
+
+  <div class="hr"></div>
+
+  <div class="table-wrap">
+    <table class="table" id="tbl">
+      <thead>
+        <tr>
+          <th>Interne</th>
+          <th>Désignation</th>
+          <th>Statut</th>
+          <th>Échéance</th>
+          <th>Famille</th>
+          <th>Domaine</th>
+          <th>Service</th>
+          <th>Salle</th>
+          <th>Responsable</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>
+</div>
+
+
+      <div class="modal-backdrop" id="modalBackdrop">
+        <div class="modal">
+          <div class="head">
+            <div>
+              <div class="h2" id="modalTitle">—</div>
+              <div class="small" id="modalSubtitle">—</div>
+            </div>
+            <div class="x" id="modalClose">✕</div>
+          </div>
+          <div class="hr"></div>
+          <div id="modalBody"></div>
+        </div>
+      </div>
+
+      <script>
+        (async ()=>{
+          await requireAuth();
+          await initShell("equipment");
+          
+let rows = [];
+let statusMap = {};
+function severityFromStatusCode(code){
+  const s = Object.values(statusMap).find(x=>x.code===code);
+  return s ? Number(s.severity) : null;
+}
+function bucket(sev){
+  if(sev===null || sev===undefined) return 'na';
+  const s = Number(sev);
+  if(s>=3) return 'crit';
+  if(s===2) return 'alert';
+  if(s===1) return 'watch';
+  return 'ok';
+}
+function sortRows(arr){
+  const mode = qs('#sortBy').value;
+  const copy = arr.slice();
+  if(mode==='due_asc') copy.sort((a,b)=> (a.next_due_date||'9999').localeCompare(b.next_due_date||'9999'));
+  if(mode==='due_desc') copy.sort((a,b)=> (b.next_due_date||'').localeCompare(a.next_due_date||''));
+  if(mode==='internal_asc') copy.sort((a,b)=> (a.internal_number||'').localeCompare(b.internal_number||''));
+  if(mode==='designation_asc') copy.sort((a,b)=> (a.designation||'').localeCompare(b.designation||''));
+  return copy;
+}
+function render(){
+  const q = qs('#q').value.trim().toLowerCase();
+  const sev = qs('#sev').value;
+  let filtered = rows.slice();
+  if(q){
+    filtered = filtered.filter(r=>{
+      const hay = `${r.designation||''} ${r.internal_number||''} ${r.external_number||''} ${r.responsible||''} ${r.service||''} ${r.room||''}`.toLowerCase();
+      return hay.includes(q);
+    });
+  }
+  filtered = filtered.map(r=>{
+    const sevNum = severityFromStatusCode(r.status_code);
+    return { ...r, __sev: sevNum, __bucket: bucket(sevNum) };
+  });
+  if(sev!=='all') filtered = filtered.filter(r=>r.__bucket===sev);
+  filtered = sortRows(filtered);
+  qs('#countLabel').textContent = `${filtered.length} résultat(s)`;
+  qs('#tbl tbody').innerHTML = filtered.map(r=>{
+    const badge = badgeForSeverity(r.__sev);
+    const status = `${badge} <span class="small">${r.status_label||'—'}</span>`;
+    const due = fmtDate(r.next_due_date) || '—';
+    const internal = `<a href="equipment_view.html?id=${encodeURIComponent(r.equipment_id)}" style="font-weight:800">${r.internal_number||'—'}</a>`;
+    const des = `${r.designation||'—'}<div class="small">${r.external_number?('Ext: '+r.external_number):''}</div>`;
+    return `<tr>
+      <td>${internal}</td>
+      <td>${des}</td>
+      <td>${status}</td>
+      <td>${due}</td>
+      <td>${r.family||'—'}</td>
+      <td>${r.domain||'—'}</td>
+      <td>${r.service||'—'}</td>
+      <td>${r.room||'—'}</td>
+      <td>${r.responsible||'—'}</td>
+    </tr>`;
+  }).join('');
+}
+async function load(){
+  statusMap = await fetchStatusMap();
+  rows = await fetchEquipmentListUI();
+  render();
+}
+qs('#refreshBtn').addEventListener('click', load);
+qs('#q').addEventListener('input', ()=>{ clearTimeout(window.__t); window.__t=setTimeout(render,200); });
+qs('#sev').addEventListener('change', render);
+qs('#sortBy').addEventListener('change', render);
+await load();
+
+        })();
+      </script>
+    </main>
+  </div>
+
+  <script>
+    (function(){
+      const bd = document.getElementById('modalBackdrop');
+      const close = document.getElementById('modalClose');
+      function hide(){ bd.classList.remove('show'); }
+      function show(){ bd.classList.add('show'); }
+      bd.addEventListener('click', (e)=>{ if(e.target===bd) hide(); });
+      close.addEventListener('click', hide);
+      window.MXModal = {
+        open: ({title, subtitle, bodyHtml})=>{
+          document.getElementById('modalTitle').textContent = title || '';
+          document.getElementById('modalSubtitle').textContent = subtitle || '';
+          document.getElementById('modalBody').innerHTML = bodyHtml || '';
+          show();
+        },
+        close: hide
+      };
+    })();
+  </script>
+</body>
+</html>
+

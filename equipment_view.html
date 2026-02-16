@@ -1,0 +1,509 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Metriaxis Demo — Fiche équipement</title>
+  <link rel="stylesheet" href="assets/styles.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="assets/config.js"></script>
+  <script src="assets/supabaseClient.js"></script>
+  <script src="assets/app.js"></script>
+  <script src="assets/api.js"></script>
+</head>
+<body>
+  <div class="layout">
+    <aside class="sidebar">
+      <div class="brand">
+        <span class="logo" aria-hidden="true"></span>
+        <div>
+          <div class="title">Metriaxis</div>
+          <div class="subtle">Demo Netlify</div>
+        </div>
+      </div>
+
+      <div class="nav" aria-label="Navigation">
+        <a href="kpi.html" data-page="kpi"><span>KPI</span><span class="small">→</span></a>
+        <a href="planning.html" data-page="planning"><span>Planning</span><span class="small">→</span></a>
+        <a href="equipment.html" data-page="equipment"><span>Équipements</span><span class="small">→</span></a>
+      </div>
+
+      <div class="meta">
+        <div class="row between">
+          <div class="small">Client</div>
+          <select id="clientSelect" class="input" style="max-width:160px;padding:8px 10px;border-radius:12px"></select>
+        </div>
+        <div style="margin-top:10px" class="kv"><span>Nom</span><span id="clientMetaName">—</span></div>
+        <div class="kv"><span>Code</span><span id="clientMetaCode">—</span></div>
+        <div class="kv"><span>User</span><span id="userEmail">—</span></div>
+        <div style="margin-top:10px" class="row end">
+          <button id="logoutBtn" class="btn secondary sm">Déconnexion</button>
+        </div>
+        <div id="shellNotice" class="notice" style="margin-top:10px"></div>
+      </div>
+    </aside>
+
+    <main class="main">
+      <div class="page-head">
+        <div class="left">
+          <div class="breadcrumb"><a href="kpi.html">Dashboard</a> / <a href="equipment.html">Équipements</a> / <span class="small">Fiche</span></div>
+          <div class="h1">Fiche équipement</div>
+          <div class="subtle">Onglets + Documents</div>
+        </div>
+        <div class="actions"><a class="btn secondary sm" href="planning.html">Planning</a></div>
+      </div>
+
+      <div class="card" style="padding:14px">
+  <div class="row between">
+    <div>
+      <div class="h2" id="title">Fiche équipement</div>
+      <div class="small" id="subtitle">—</div>
+      <div class="tabs" style="margin-top:10px">
+        <span class="tab active" data-tab="overview">Infos</span>
+        <span class="tab" data-tab="planning">Planning tests</span>
+        <span class="tab" data-tab="operations">Opérations</span>
+        <span class="tab" data-tab="documents">Documents</span>
+        <span class="tab" data-tab="history">Historique statuts</span>
+        <span class="tab" data-tab="audit">Audit</span>
+      </div>
+    </div>
+    <div class="row" style="gap:8px">
+      <a class="btn ghost sm" href="equipment.html">← Liste</a>
+      <button id="saveBtn" class="btn primary sm">Enregistrer</button>
+    </div>
+  </div>
+
+  <div class="hr"></div>
+
+  <div id="tab-overview">
+    <div class="grid grid-2">
+      <div class="card" style="padding:14px">
+        <div class="h2">Données équipement</div>
+        <div class="small">equipment</div>
+        <div class="hr"></div>
+        <div class="grid grid-2">
+          <div><div class="h3">Désignation</div><input class="input" id="designation"></div>
+          <div><div class="h3">Portée</div><input class="input" id="asset_scope"></div>
+          <div><div class="h3">N° interne</div><input class="input" id="internal_number"></div>
+          <div><div class="h3">N° externe</div><input class="input" id="external_number"></div>
+          <div><div class="h3">Domaine</div><select class="input" id="domain_id"></select></div>
+          <div><div class="h3">Famille</div><select class="input" id="family_id"></select></div>
+          <div><div class="h3">Service</div><select class="input" id="service_id"></select></div>
+          <div><div class="h3">Salle</div><select class="input" id="room_id"></select></div>
+          <div><div class="h3">Responsable</div><select class="input" id="responsible_personnel_id"></select></div>
+          <div><div class="h3">Statut</div><select class="input" id="current_status_id"></select></div>
+          <div><div class="h3">Échéance</div><input class="input" id="next_due_date" type="date"></div>
+          <div><div class="h3">Archivé</div><select class="input" id="is_archived"><option value="false">Non</option><option value="true">Oui</option></select></div>
+        </div>
+      </div>
+
+      <div class="card" style="padding:14px">
+        <div class="h2">Détails</div>
+        <div class="small">equipment_details</div>
+        <div class="hr"></div>
+        <div class="grid grid-2">
+          <div><div class="h3">Marque</div><input class="input" id="brand"></div>
+          <div><div class="h3">Modèle</div><input class="input" id="model"></div>
+          <div><div class="h3">Fabricant</div><input class="input" id="manufacturer"></div>
+          <div><div class="h3">N° série</div><input class="input" id="serial_number"></div>
+          <div><div class="h3">Firmware</div><input class="input" id="firmware"></div>
+          <div><div class="h3">Criticité</div><input class="input" id="criticality"></div>
+          <div><div class="h3">Amortissement</div><input class="input" id="amortization"></div>
+          <div><div class="h3">Immobilisation</div><input class="input" id="immobilization_number"></div>
+          <div><div class="h3">PO</div><input class="input" id="purchase_order"></div>
+          <div><div class="h3">Facture</div><input class="input" id="invoice_ref"></div>
+        </div>
+        <div style="margin-top:10px">
+          <div class="h3">Notes</div>
+          <textarea class="input" id="notes"></textarea>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="tab-planning" style="display:none">
+    <div class="row between">
+      <div><div class="h2">Planning des tests</div><div class="subtle">equipment_tests</div></div>
+      <a class="btn secondary sm" id="addTestLink" href="#">+ Nouveau test</a>
+    </div>
+    <div class="hr"></div>
+    <div class="table-wrap">
+      <table class="table" id="testsTbl"><thead>
+        <tr><th>Actif</th><th>Type opération</th><th>Template</th><th>Fréquence</th><th>Dernier</th><th>Échéance</th></tr>
+      </thead><tbody></tbody></table>
+    </div>
+  </div>
+
+  <div id="tab-operations" style="display:none">
+    <div class="row between">
+      <div><div class="h2">Opérations</div><div class="subtle">operations</div></div>
+      <a class="btn secondary sm" id="addOpLink" href="#">+ Nouvelle opération</a>
+    </div>
+    <div class="hr"></div>
+    <div class="table-wrap">
+      <table class="table" id="opsTbl"><thead>
+        <tr><th>Date</th><th>Type</th><th>Conforme</th><th>Intervenant</th><th>Commentaire</th></tr>
+      </thead><tbody></tbody></table>
+    </div>
+  </div>
+
+  <div id="tab-documents" style="display:none">
+    <div class="row between">
+      <div><div class="h2">Documents</div><div class="subtle">documents (liens simples)</div></div>
+      <button id="addDocBtn" class="btn secondary sm">+ Ajouter un document</button>
+    </div>
+    <div class="hr"></div>
+
+    <div class="grid grid-2">
+      <div class="card" style="padding:12px">
+        <div class="h3">Liés à l’équipement</div>
+        <div class="hr"></div>
+        <div id="docsEquip" class="grid" style="gap:8px"></div>
+      </div>
+      <div class="card" style="padding:12px">
+        <div class="h3">Liés aux opérations / tests</div>
+        <div class="hr"></div>
+        <div id="docsOther" class="grid" style="gap:8px"></div>
+      </div>
+    </div>
+  </div>
+
+  <div id="tab-history" style="display:none">
+    <div class="h2">Historique statuts</div><div class="subtle">status_history</div>
+    <div class="hr"></div>
+    <div class="table-wrap">
+      <table class="table" id="histTbl"><thead><tr><th>Quand</th><th>Ancien</th><th>Nouveau</th><th>Raison</th></tr></thead><tbody></tbody></table>
+    </div>
+  </div>
+
+  <div id="tab-audit" style="display:none">
+    <div class="h2">Audit</div><div class="subtle">audit_log (200 derniers)</div>
+    <div class="hr"></div>
+    <div class="table-wrap">
+      <table class="table" id="auditTbl"><thead><tr><th>Quand</th><th>Action</th><th>Table</th><th>Old</th><th>New</th></tr></thead><tbody></tbody></table>
+    </div>
+  </div>
+</div>
+
+
+      <div class="modal-backdrop" id="modalBackdrop">
+        <div class="modal">
+          <div class="head">
+            <div>
+              <div class="h2" id="modalTitle">—</div>
+              <div class="small" id="modalSubtitle">—</div>
+            </div>
+            <div class="x" id="modalClose">✕</div>
+          </div>
+          <div class="hr"></div>
+          <div id="modalBody"></div>
+        </div>
+      </div>
+
+      <script>
+        (async ()=>{
+          await requireAuth();
+          await initShell("equipment");
+          
+const id = getParam('id');
+if(!id){ toast("Navigation", "ID équipement manquant", "err"); throw new Error("missing id"); }
+
+function setTab(name){
+  qsa('.tab').forEach(b=> b.classList.toggle('active', b.dataset.tab===name));
+  ['overview','planning','operations','documents','history','audit'].forEach(t=>{
+    qs('#tab-'+t).style.display = (t===name) ? 'block' : 'none';
+  });
+  history.replaceState(null, '', `equipment_view.html?id=${encodeURIComponent(id)}#${name}`);
+}
+qsa('.tab').forEach(b=> b.addEventListener('click', ()=> setTab(b.dataset.tab)));
+const hash = (location.hash || '').replace('#','');
+if(['overview','planning','operations','documents','history','audit'].includes(hash)) setTab(hash);
+
+const statusMap = await fetchStatusMap();
+const domains = await lookup('domains','id,name');
+const families = await lookup('equipment_families','id,name');
+const services = await lookup('services','id,name');
+const rooms = await lookup('rooms','id,name,service_id');
+const personnel = await lookup('personnel','id,first_name,last_name');
+const opTypes = await lookup('operation_types','id,label,code,is_active');
+const templates = await lookup('test_templates','id,name,operation_type_id,is_active');
+
+function fillSelect(el, items, placeholder='—'){
+  el.innerHTML = `<option value="">${placeholder}</option>` + items.map(x=>`<option value="${x.id}">${x.name||x.label||x.code||x.id}</option>`).join('');
+}
+fillSelect(qs('#domain_id'), domains);
+fillSelect(qs('#family_id'), families);
+fillSelect(qs('#service_id'), services);
+fillSelect(qs('#room_id'), rooms.map(r=>({id:r.id,name:r.name})));
+fillSelect(qs('#responsible_personnel_id'), personnel.map(p=>({id:p.id,name:`${(p.first_name||'')} ${(p.last_name||'')}`.trim() || p.id})));
+qs('#current_status_id').innerHTML = `<option value="">—</option>` + Object.values(statusMap).map(s=>`<option value="${s.id}">${s.label} (sev ${s.severity})</option>`).join('');
+
+const eq = await fetchEquipment(id);
+const det = await fetchEquipmentDetails(id);
+
+qs('#title').textContent = eq.designation || 'Fiche équipement';
+qs('#subtitle').textContent = `Interne: ${eq.internal_number||'—'} • ID: ${eq.id}`;
+
+function setVal(fid, v){
+  const el = qs('#'+fid);
+  if(!el) return;
+  if(el.type === 'date'){
+    el.value = v ? String(v).slice(0,10) : '';
+  }else if(el.tagName === 'SELECT'){
+    el.value = (v===null || v===undefined) ? '' : String(v);
+  }else{
+    el.value = v===null || v===undefined ? '' : String(v);
+  }
+}
+setVal('designation', eq.designation);
+setVal('asset_scope', eq.asset_scope);
+setVal('internal_number', eq.internal_number);
+setVal('external_number', eq.external_number);
+setVal('domain_id', eq.domain_id);
+setVal('family_id', eq.family_id);
+setVal('service_id', eq.service_id);
+setVal('room_id', eq.room_id);
+setVal('responsible_personnel_id', eq.responsible_personnel_id);
+setVal('current_status_id', eq.current_status_id);
+setVal('next_due_date', eq.next_due_date);
+setVal('is_archived', !!eq.is_archived);
+
+const detFields = ['brand','model','manufacturer','serial_number','firmware','criticality','amortization','immobilization_number','purchase_order','invoice_ref','notes'];
+for(const f of detFields) setVal(f, det?.[f]);
+
+qs('#addOpLink').href = `operation_new.html?equipment_id=${encodeURIComponent(id)}`;
+qs('#addTestLink').href = `test_new.html?equipment_id=${encodeURIComponent(id)}`;
+
+function mapById(arr){ return Object.fromEntries((arr||[]).map(x=>[x.id,x])); }
+
+let ops = [];
+let tests = [];
+
+async function loadTests(){
+  tests = await fetchEquipmentTests(id);
+  const opTypeMap = mapById(opTypes);
+  const tplMap = mapById(templates);
+  qs('#testsTbl tbody').innerHTML = (tests||[]).map(t=>`
+    <tr>
+      <td>${t.is_active ? 'Oui' : 'Non'}</td>
+      <td>${opTypeMap[t.operation_type_id]?.label || '—'}</td>
+      <td>${tplMap[t.test_template_id]?.name || '—'}</td>
+      <td>${t.frequency_days ?? '—'}</td>
+      <td>${fmtDateTime(t.last_done_at) || '—'}</td>
+      <td>${fmtDate(t.next_due_date) || '—'}</td>
+    </tr>
+  `).join('');
+}
+
+async function loadOps(){
+  ops = await fetchOperations(id);
+  const opTypeMap = mapById(opTypes);
+  qs('#opsTbl tbody').innerHTML = (ops||[]).map(o=>`
+    <tr>
+      <td>${fmtDateTime(o.performed_at) || '—'}</td>
+      <td>${opTypeMap[o.operation_type_id]?.label || '—'}</td>
+      <td>${o.conformity === null ? '—' : (o.conformity ? 'Oui' : 'Non')}</td>
+      <td>${o.intervenant_text || '—'}</td>
+      <td>${(o.comment||'').slice(0,120)}${(o.comment||'').length>120?'…':''}</td>
+    </tr>
+  `).join('');
+}
+
+async function loadHistory(){
+  const hist = await fetchStatusHistory(id);
+  qs('#histTbl tbody').innerHTML = (hist||[]).map(h=>{
+    const oldS = statusMap[h.old_status_id];
+    const newS = statusMap[h.new_status_id];
+    return `
+      <tr>
+        <td>${fmtDateTime(h.changed_at) || '—'}</td>
+        <td>${oldS ? oldS.label : '—'}</td>
+        <td>${newS ? newS.label : '—'}</td>
+        <td>${h.reason || '—'}</td>
+      </tr>`;
+  }).join('');
+}
+
+async function loadAudit(){
+  const logs = await fetchAuditLogForEquipment(id);
+  qs('#auditTbl tbody').innerHTML = (logs||[]).map(l=>{
+    const oldTxt = l.old_data ? JSON.stringify(l.old_data) : '';
+    const newTxt = l.new_data ? JSON.stringify(l.new_data) : '';
+    return `
+      <tr>
+        <td>${fmtDateTime(l.changed_at) || '—'}</td>
+        <td>${l.action || '—'}</td>
+        <td>${l.table_name || '—'}</td>
+        <td><div class="small" style="max-width:260px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${oldTxt}</div></td>
+        <td><div class="small" style="max-width:260px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${newTxt}</div></td>
+      </tr>`;
+  }).join('');
+}
+
+function docCard(d, prefix){
+  const url = d.storage_path || '';
+  const safeUrl = url.replaceAll('"','&quot;');
+  const tags = (d.tags||[]).map(t=>`<span class="badge dot gray">${t}</span>`).join(' ');
+  return `<div class="card" style="padding:10px">
+    <div class="row between">
+      <div style="font-weight:800">${d.file_name}</div>
+      <span class="badge dot gray">${d.doc_type || prefix}</span>
+    </div>
+    <div class="small" style="margin-top:4px;word-break:break-all">${url}</div>
+    <div class="row" style="margin-top:8px;gap:8px;flex-wrap:wrap">
+      <a class="btn secondary sm" href="${safeUrl}" target="_blank" rel="noopener">Ouvrir</a>
+      <span class="small">${fmtDateTime(d.uploaded_at) || ''}</span>
+      ${tags}
+    </div>
+  </div>`;
+}
+
+async function loadDocs(){
+  const equipDocs = await fetchDocumentsForEquipment(id);
+  const opIds = (ops||[]).map(o=>o.id).filter(Boolean);
+  const testIds = (tests||[]).map(t=>t.id).filter(Boolean);
+  const opDocs = await fetchDocumentsForOperations(opIds);
+  const testDocs = await fetchDocumentsForTests(testIds);
+
+  qs('#docsEquip').innerHTML = equipDocs.length ? equipDocs.map(d=>docCard(d,'Équipement')).join('') : `<div class="small">Aucun document lié à l’équipement.</div>`;
+  const other = [...opDocs.map(d=>({d, p:'Opération'})), ...testDocs.map(d=>({d, p:'Test'}))];
+  qs('#docsOther').innerHTML = other.length ? other.map(x=>docCard(x.d, x.p)).join('') : `<div class="small">Aucun document lié aux opérations/tests.</div>`;
+}
+
+qs('#addDocBtn').addEventListener('click', ()=>{
+  const body = `
+    <div class="grid grid-2">
+      <div>
+        <div class="h3">Nom fichier</div>
+        <input id="m_file_name" class="input" placeholder="Rapport_2026-02-16.pdf">
+      </div>
+      <div>
+        <div class="h3">Type</div>
+        <input id="m_doc_type" class="input" placeholder="rapport, certificat, photo…">
+      </div>
+      <div style="grid-column:1/-1">
+        <div class="h3">Lien (URL) ou chemin</div>
+        <input id="m_storage_path" class="input" placeholder="https://... ou bucket/path">
+      </div>
+      <div>
+        <div class="h3">Tags (csv)</div>
+        <input id="m_tags" class="input" placeholder="IQ,OQ,certificat">
+      </div>
+      <div>
+        <div class="h3">Lier à</div>
+        <select id="m_link_to" class="input">
+          <option value="equipment">Équipement</option>
+          <option value="operation">Dernière opération</option>
+          <option value="test">Prochain test</option>
+        </select>
+      </div>
+    </div>
+    <div class="row end" style="margin-top:12px">
+      <button id="m_save" class="btn primary">Ajouter</button>
+    </div>
+  `;
+  MXModal.open({title:"Ajouter un document", subtitle:"Insertion dans documents (lien)", bodyHtml:body});
+
+  document.getElementById('m_save').addEventListener('click', async ()=>{
+    try{
+      const file_name = document.getElementById('m_file_name').value.trim();
+      const storage_path = document.getElementById('m_storage_path').value.trim();
+      if(!file_name || !storage_path){ toast("Validation", "file_name et storage_path requis", "err"); return; }
+      const doc_type = document.getElementById('m_doc_type').value.trim() || null;
+      const tagsCsv = document.getElementById('m_tags').value.trim();
+      const tags = tagsCsv ? tagsCsv.split(',').map(x=>x.trim()).filter(Boolean) : null;
+      const linkTo = document.getElementById('m_link_to').value;
+
+      const payload = { client_id: getClientId(), file_name, storage_path, doc_type, tags, equipment_id: id };
+      if(linkTo==='operation') payload.operation_id = ops?.[0]?.id || null;
+      if(linkTo==='test') payload.equipment_test_id = tests?.[0]?.id || null;
+
+      await createDocumentLink(payload);
+      toast("Ajouté", "Document enregistré", "ok");
+      MXModal.close();
+      await loadDocs();
+    }catch(e){
+      toast("Erreur", e.message || String(e), "err", 5200);
+    }
+  });
+});
+
+await loadTests();
+await loadOps();
+await loadDocs();
+await loadHistory();
+await loadAudit();
+
+qs('#saveBtn').addEventListener('click', async ()=>{
+  const btn = qs('#saveBtn'); btn.disabled = true;
+  try{
+    const patchEq = {
+      designation: qs('#designation').value.trim() || null,
+      asset_scope: qs('#asset_scope').value.trim() || null,
+      internal_number: qs('#internal_number').value.trim() || null,
+      external_number: qs('#external_number').value.trim() || null,
+      domain_id: qs('#domain_id').value || null,
+      family_id: qs('#family_id').value || null,
+      service_id: qs('#service_id').value || null,
+      room_id: qs('#room_id').value || null,
+      responsible_personnel_id: qs('#responsible_personnel_id').value || null,
+      current_status_id: qs('#current_status_id').value || null,
+      next_due_date: qs('#next_due_date').value || null,
+      is_archived: qs('#is_archived').value === 'true'
+    };
+    const { error: e1 } = await sb.from('equipment').update(patchEq).eq('client_id', getClientId()).eq('id', id);
+    if(e1) throw e1;
+
+    const patchDet = {
+      client_id: getClientId(),
+      equipment_id: id,
+      brand: qs('#brand').value.trim() || null,
+      model: qs('#model').value.trim() || null,
+      manufacturer: qs('#manufacturer').value.trim() || null,
+      serial_number: qs('#serial_number').value.trim() || null,
+      firmware: qs('#firmware').value.trim() || null,
+      criticality: qs('#criticality').value.trim() || null,
+      amortization: qs('#amortization').value.trim() || null,
+      immobilization_number: qs('#immobilization_number').value.trim() || null,
+      purchase_order: qs('#purchase_order').value.trim() || null,
+      invoice_ref: qs('#invoice_ref').value.trim() || null,
+      notes: qs('#notes').value.trim() || null
+    };
+    const { error: e2 } = await sb.from('equipment_details').upsert(patchDet, { onConflict: 'equipment_id' });
+    if(e2) throw e2;
+
+    toast("Enregistré", "Modifications sauvegardées", "ok");
+  }catch(e){
+    toast("Erreur", e.message || String(e), "err", 5200);
+  }finally{
+    btn.disabled=false;
+  }
+});
+
+        })();
+      </script>
+    </main>
+  </div>
+
+  <script>
+    (function(){
+      const bd = document.getElementById('modalBackdrop');
+      const close = document.getElementById('modalClose');
+      function hide(){ bd.classList.remove('show'); }
+      function show(){ bd.classList.add('show'); }
+      bd.addEventListener('click', (e)=>{ if(e.target===bd) hide(); });
+      close.addEventListener('click', hide);
+      window.MXModal = {
+        open: ({title, subtitle, bodyHtml})=>{
+          document.getElementById('modalTitle').textContent = title || '';
+          document.getElementById('modalSubtitle').textContent = subtitle || '';
+          document.getElementById('modalBody').innerHTML = bodyHtml || '';
+          show();
+        },
+        close: hide
+      };
+    })();
+  </script>
+</body>
+</html>
+
