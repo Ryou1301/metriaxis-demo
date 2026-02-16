@@ -1,0 +1,204 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Metriaxis Demo — Nouveau test</title>
+  <link rel="stylesheet" href="assets/styles.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="assets/config.js"></script>
+  <script src="assets/supabaseClient.js"></script>
+  <script src="assets/app.js"></script>
+  <script src="assets/api.js"></script>
+</head>
+<body>
+  <div class="layout">
+    <aside class="sidebar">
+      <div class="brand">
+        <span class="logo" aria-hidden="true"></span>
+        <div>
+          <div class="title">Metriaxis</div>
+          <div class="subtle">Demo Netlify</div>
+        </div>
+      </div>
+
+      <div class="nav" aria-label="Navigation">
+        <a href="kpi.html" data-page="kpi"><span>KPI</span><span class="small">→</span></a>
+        <a href="equipment.html" data-page="equipment"><span>Équipements</span><span class="small">→</span></a>
+      </div>
+
+      <div class="meta">
+        <div class="row between">
+          <div class="small">Client</div>
+          <select id="clientSelect" class="input" style="max-width:160px;padding:8px 10px;border-radius:12px"></select>
+        </div>
+        <div style="margin-top:10px" class="kv"><span>Nom</span><span id="clientMetaName">—</span></div>
+        <div class="kv"><span>Code</span><span id="clientMetaCode">—</span></div>
+        <div class="kv"><span>User</span><span id="userEmail">—</span></div>
+        <div style="margin-top:10px" class="row end">
+          <button id="logoutBtn" class="btn secondary sm">Déconnexion</button>
+        </div>
+        <div id="shellNotice" class="notice" style="margin-top:10px"></div>
+      </div>
+    </aside>
+
+    <main class="main">
+      <div class="page-head">
+        <div class="left">
+          <div class="breadcrumb"><a href="kpi.html">Dashboard</a>  /  <a href="equipment.html">Équipements</a>  /  <span class="small">Nouveau test</span></div>
+          <div class="h1">Nouveau test</div>
+          <div class="subtle">Paramètres + tolérances</div>
+        </div>
+        <div class="actions"></div>
+      </div>
+
+      
+<div class="card" style="padding:14px;max-width:920px">
+  <div class="row between">
+    <div>
+      <div class="h2">Créer un test (planning)</div>
+      <div class="subtle">Table <code>equipment_tests</code></div>
+    </div>
+    <a class="btn ghost sm" id="backLink" href="#">← Retour fiche</a>
+  </div>
+
+  <div class="hr"></div>
+
+  <div class="grid grid-2">
+    <div>
+      <div class="h3">Équipement</div>
+      <input class="input" id="equipment_id" readonly>
+    </div>
+    <div>
+      <div class="h3">Template</div>
+      <select class="input" id="test_template_id"></select>
+    </div>
+
+    <div>
+      <div class="h3">Type d’opération</div>
+      <select class="input" id="operation_type_id"></select>
+    </div>
+    <div>
+      <div class="h3">Actif</div>
+      <select class="input" id="is_active">
+        <option value="true">Oui</option>
+        <option value="false">Non</option>
+      </select>
+    </div>
+
+    <div>
+      <div class="h3">Fréquence (jours)</div>
+      <input class="input" id="frequency_days" type="number" min="1" step="1" value="365">
+    </div>
+    <div>
+      <div class="h3">Prochaine échéance</div>
+      <input class="input" id="next_due_date" type="date">
+    </div>
+
+    <div>
+      <div class="h3">Tolérance avant (jours)</div>
+      <input class="input" id="tolerance_before_days" type="number" min="0" step="1" value="0">
+    </div>
+    <div>
+      <div class="h3">Tolérance après (jours)</div>
+      <input class="input" id="tolerance_after_days" type="number" min="0" step="1" value="0">
+    </div>
+  </div>
+
+  <div class="row end" style="margin-top:12px">
+    <button id="createBtn" class="btn primary">Créer</button>
+  </div>
+</div>
+
+
+      <script>
+        (async ()=>{
+          await requireAuth();
+          await initShell("equipment");
+          
+const equipment_id = getParam('equipment_id');
+if(!equipment_id){ toast("Navigation", "equipment_id manquant", "err"); throw new Error("missing equipment_id"); }
+qs('#equipment_id').value = equipment_id;
+qs('#backLink').href = `equipment_view.html?id=${encodeURIComponent(equipment_id)}#planning`;
+
+const opTypesAll = await lookup('operation_types','id,code,label,category,is_active');
+  const opTypes = (opTypesAll||[]).filter(o=>o.category==='test');
+qs('#operation_type_id').innerHTML = `<option value="">—</option>` + opTypes.filter(o=>o.is_active!==false).map(o=>`<option value="${o.id}">${o.label}</option>`).join('');
+
+const templatesAll = await lookup('test_templates','id,name,operation_type_id,is_active');
+  const allowedOpTypeIds = new Set(opTypes.map(o=>o.id));
+  const templates = (templatesAll||[]).filter(t=>!t.operation_type_id || allowedOpTypeIds.has(t.operation_type_id));
+qs('#test_template_id').innerHTML = `<option value="">—</option>` + templates.filter(t=>t.is_active!==false).map(t=>`<option value="${t.id}" data-op="${t.operation_type_id||''}">${t.name}</option>`).join('');
+
+qs('#test_template_id').addEventListener('change', ()=>{
+  const opt = qs('#test_template_id').selectedOptions[0];
+  const opId = opt?.getAttribute('data-op');
+  if(opId) qs('#operation_type_id').value = opId;
+});
+
+const d = new Date(); d.setDate(d.getDate()+30);
+qs('#next_due_date').value = d.toISOString().slice(0,10);
+
+qs('#createBtn').addEventListener('click', async ()=>{
+  const btn = qs('#createBtn');
+  btn.disabled = true;
+  try{
+    const client_id = getClientId();
+    if(!client_id){ toast("Client", "client_id manquant (sélection client)", "err"); return; }
+
+    const test_template_id = qs('#test_template_id').value || null;
+    const operation_type_id = qs('#operation_type_id').value || null;
+
+    // QUALIMS-like guardrails: au moins un des deux
+    if(!test_template_id && !operation_type_id){
+      toast("Validation", "Choisis un template ou un type d’opération.", "err");
+      return;
+    }
+
+    let frequency_days = Number(qs('#frequency_days').value || 0);
+    if(!Number.isFinite(frequency_days) || frequency_days < 1) frequency_days = null;
+
+    let next_due_date = qs('#next_due_date').value || null;
+    if(!next_due_date && frequency_days){
+      const d = new Date();
+      d.setDate(d.getDate() + frequency_days);
+      next_due_date = d.toISOString().slice(0,10);
+      qs('#next_due_date').value = next_due_date;
+    }
+
+    const tolerance_before_days = Math.max(0, Number(qs('#tolerance_before_days').value || 0) || 0);
+    const tolerance_after_days = Math.max(0, Number(qs('#tolerance_after_days').value || 0) || 0);
+
+    const payload = {
+      client_id,
+      equipment_id,
+      test_template_id,
+      operation_type_id,
+      is_active: qs('#is_active').value === 'true',
+      frequency_days,
+      next_due_date,
+      tolerance_before_days,
+      tolerance_after_days,
+      last_done_at: null
+    };
+
+    // Insert + readback (confirme que ça écrit bien)
+    const { data, error } = await sb.from('equipment_tests').insert(payload).select('id,created_at,equipment_id,operation_type_id,test_template_id,next_due_date').single();
+    if(error) throw error;
+
+    toast("Créé", `Test ajouté (id: ${data.id})`, "ok");
+    setTimeout(()=> location.href = `equipment_view.html?id=${encodeURIComponent(equipment_id)}#planning`, 350);
+  }catch(e){
+    toast("Erreur", e.message || String(e), "err", 5200);
+  }finally{
+    btn.disabled = false;
+  }
+});
+
+        })();
+      </script>
+    </main>
+  </div>
+</body>
+</html>
+
